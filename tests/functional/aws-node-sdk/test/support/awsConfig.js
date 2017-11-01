@@ -17,10 +17,14 @@ function getAwsCredentials(profile, credFile) {
 }
 
 function getRealAwsConfig(awsLocation) {
+    console.log('=====================');
+    console.log('awsLocation', config.locationConstraints[awsLocation]);
     const cp =
         config.locationConstraints[awsLocation].details.credentialsProfile
         || 'default';
+    console.log('credentials profile (cp)', cp);
     const credentials = getAwsCredentials(cp, '/.aws/credentials');
+    console.log('credentials in getRealAwsConfig', credentials);
     const realAwsConfig = { credentials, signatureVersion: 'v4' };
 
     return realAwsConfig;
