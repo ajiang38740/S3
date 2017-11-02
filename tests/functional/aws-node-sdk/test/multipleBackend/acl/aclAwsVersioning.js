@@ -10,6 +10,7 @@ const {
     putNullVersionsToAws,
     putVersionsToAws,
     getAndAssertResult,
+    getExpectedOwnerInfo,
 } = require('../utils');
 
 const someBody = 'testbody';
@@ -44,13 +45,6 @@ class _AccessControlPolicy {
         this.Grants.push(grant);
     }
 }
-
-const ownerParams = {
-    ownerID: '79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be',
-    ownerDisplayName: 'Bart',
-};
-const testAcp = new _AccessControlPolicy(ownerParams);
-testAcp.addGrantee('Group', constants.publicId, 'READ');
 
 function putObjectAcl(s3, key, versionId, acp, cb) {
     s3.putObjectAcl({ Bucket: bucket, Key: key, AccessControlPolicy: acp,
@@ -147,11 +141,24 @@ function testSuite() {
     withV4(sigCfg => {
         let bucketUtil;
         let s3;
+        let ownerParams;
+        let testAcp;
+
+        before(done => {
+            bucketUtil = new BucketUtility('default', sigCfg);
+            s3 = bucketUtil.s3;
+            const key = `getaclcredentials-${Date.now()}`;
+            getExpectedOwnerInfo(s3, bucket, key,
+                (err, ownerInfo) => {
+                    ownerParams = ownerInfo;
+                    testAcp = new _AccessControlPolicy(ownerInfo);
+                    testAcp.addGrantee('Group', constants.publicId, 'READ');
+                    done();
+                });
+        });
 
         beforeEach(() => {
             process.stdout.write('Creating bucket');
-            bucketUtil = new BucketUtility('default', sigCfg);
-            s3 = bucketUtil.s3;
             return s3.createBucketAsync({ Bucket: bucket,
                 CreateBucketConfiguration: {
                     LocationConstraint: awsLocation,

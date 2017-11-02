@@ -332,5 +332,28 @@ utils.tagging.awsGetAssertTags = (params, cb) => {
     });
 };
 
+utils.getExpectedOwnerInfo = (s3, bucket, testkey, cb) => {
+    async.waterfall([
+        next => s3.createBucket({ Bucket: bucket }, err => next(err)),
+        next => s3.putObject({ Bucket: bucket, Key: testkey },
+            err => next(err)),
+        next => s3.getObjectAcl({ Bucket: bucket, Key: testkey }, next),
+        // clean up bucket
+        (aclData, next) => s3.deleteObject({ Bucket: bucket, Key: testkey },
+            err => next(err, aclData)),
+        (aclData, next) => s3.deleteBucket({ Bucket: bucket },
+            err => next(err, aclData)),
+    ], (err, data) => {
+        assert.strictEqual(err, null, `Got unexpected error: ${err}`);
+        assert(data.Owner, 'Expected Owner property in data');
+        assert(data.Owner.DisplayName, 'Expected Owner.DisplayName in data');
+        assert(data.Owner.ID, 'Expected Owner.ID in data');
+        const ownerInfo = {
+            ownerDisplayName: data.Owner.DisplayName,
+            ownerID: data.Owner.ID,
+        };
+        return cb(null, ownerInfo);
+    });
+};
 
 module.exports = utils;
