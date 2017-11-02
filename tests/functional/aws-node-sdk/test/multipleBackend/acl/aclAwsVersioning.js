@@ -11,6 +11,7 @@ const {
     putVersionsToAws,
     getAndAssertResult,
     getExpectedOwnerInfo,
+    describeSkipIfNotMultiple,
 } = require('../utils');
 
 const someBody = 'testbody';
@@ -128,11 +129,6 @@ function getObjectsAndAssertAcls(s3, key, versionIds, expectedData,
             `getting object acls, got error ${err}`);
         cb();
     });
-}
-
-let describeSkipIfNotMultiple = describe.skip;
-if (config.backends.data === 'multiple') {
-    describeSkipIfNotMultiple = describe.only;
 }
 
 describeSkipIfNotMultiple('AWS backend put/get object acl with versioning',
