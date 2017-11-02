@@ -1,6 +1,7 @@
 const assert = require('assert');
 const async = require('async');
 const withV4 = require('../../support/withV4');
+const { config } = require('../../../../../../lib/Config');
 const BucketUtility = require('../../../lib/utility/bucket-util');
 const constants = require('../../../../../../constants');
 const {
@@ -9,7 +10,6 @@ const {
     putNullVersionsToAws,
     putVersionsToAws,
     getAndAssertResult,
-    describeSkipIfNotMultiple,
 } = require('../utils');
 
 const someBody = 'testbody';
@@ -134,6 +134,11 @@ function getObjectsAndAssertAcls(s3, key, versionIds, expectedData,
             `getting object acls, got error ${err}`);
         cb();
     });
+}
+
+let describeSkipIfNotMultiple = describe.skip;
+if (config.backends.data === 'multiple') {
+    describeSkipIfNotMultiple = describe.only;
 }
 
 describeSkipIfNotMultiple('AWS backend put/get object acl with versioning',
